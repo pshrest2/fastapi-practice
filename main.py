@@ -1,13 +1,21 @@
 from fastapi import FastAPI
-from enum import Enum
+from pydantic import BaseModel
 
 app = FastAPI()
 
-items = [{"name": "Foo"}, {"name": "Bar"}, {"name": "Baz"}]
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
 
 
-@app.get("/items/{item_id}")
-async def read_items(item_id: int, q: str | None = None):
-    if q:
-        return {"item_id": item_id, "q": q}
-    return {"item_id": item_id}
+@app.post("/items")
+async def create_item(item: Item):
+    return item
+
+
+@app.put("/items/{item_id}")
+async def update_item(item_id: int, item: Item):
+    return {"item_id": item_id, **item.model_dump()}
