@@ -2,11 +2,15 @@ from pydantic import BaseModel
 
 
 class ItemBase(BaseModel):
-    name: str
+    title: str
     description: str | None = None
 
 
 class ItemCreate(ItemBase):
+    pass
+
+
+class ItemUpdate(ItemBase):
     pass
 
 
@@ -15,4 +19,4 @@ class Item(ItemBase):
     owner_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

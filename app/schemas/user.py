@@ -7,13 +7,16 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str
+    pass
+
+
+class UserUpdate(UserBase):
+    pass
 
 
 class User(UserBase):
     id: int
-    is_active: bool
     items: list[Item] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
