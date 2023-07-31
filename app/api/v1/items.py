@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Response
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from fastapi import APIRouter, Response
+from fastapi.responses import JSONResponse
 
-app = FastAPI()
+router = APIRouter()
 
 
 class Item(BaseModel):
@@ -24,19 +24,19 @@ items_db = [
 ]
 
 
-@app.get("/items")
+@router.get("/")
 async def get_items() -> list[Item]:
     return items_db
 
 
-@app.post("/items")
+@router.post("/", status_code=201)
 async def create_item(item: Item) -> Item:
-    items_db.append(item)
+    items_db.routerend(item)
     return item
 
 
-@app.get(
-    "/items/{item_id}",
+@router.get(
+    "/{item_id}",
     response_model=Item,
     response_model_include=["name", "description"],
 )
@@ -44,18 +44,18 @@ async def get_item(item_id: int):
     return items_db[item_id - 1]
 
 
-@app.get("/items/{item_id}/public", response_model=Item, response_model_exclude=["tax"])
+@router.get("/{item_id}/public", response_model=Item, response_model_exclude=["tax"])
 async def get_item_public(item_id: int):
     return items_db[item_id - 1]
 
 
-@app.put("/items/{item_id}")
+@router.put("/{item_id}")
 async def update_item(item_id: int, item: Item) -> Item:
     items_db[item_id - 1] = item
     return items_db
 
 
-@app.delete("/items/{item_id}")
+@router.delete("/{item_id}")
 async def delete_item(item_id: int) -> Response:
     del items_db[item_id - 1]
     return JSONResponse(content={"message": "Item deleted successfully"})
