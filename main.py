@@ -1,10 +1,8 @@
-from fastapi import FastAPI, Depends
-from typing import Annotated
+from fastapi import FastAPI, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 app = FastAPI()
-
-items_db = [{"name": "Foo"}, {"name": "Bar"}, {"name": "Baz"}]
 
 
 class Item(BaseModel):
@@ -14,28 +12,50 @@ class Item(BaseModel):
     tax: float | None = None
 
 
-class CommonQueryParams:
-    def __init__(self, q: str | None = None, skip: int = 0, limit: int = 100):
-        self.q = q
-        self.skip = skip
-        self.limit = limit
+items_db = [
+    Item(name="Soup", description="Clear Soup", price=4.99, tax=2.99),
+    Item(name="Dumpling", description="Chicken Dumpling", price=8.99, tax=2.99),
+    Item(
+        name="Fried Rice",
+        description="Thai Fried Rice with Tofu",
+        price=12.99,
+        tax=2.99,
+    ),
+]
 
 
 @app.get("/items")
-async def get_items(commons: Annotated[CommonQueryParams, Depends(CommonQueryParams)]):
-    res = {}
-    if commons.q:
-        res.update({"q": commons.q})
-    items = items_db[commons.skip : commons.skip + commons.limit]
-    res.update({"items": items})
-    return res
+async def get_items() -> list[Item]:
+    return items_db
 
 
 @app.post("/items")
-async def create_item(item: Item):
+async def create_item(item: Item) -> Item:
+    items_db.append(item)
     return item
 
 
+@app.get(
+    "/items/{item_id}",
+    response_model=Item,
+    response_model_include=["name", "description"],
+)
+async def get_item(item_id: int):
+    return items_db[item_id - 1]
+
+
+@app.get("/items/{item_id}/public", response_model=Item, response_model_exclude=["tax"])
+async def get_item_public(item_id: int):
+    return items_db[item_id - 1]
+
+
 @app.put("/items/{item_id}")
-async def update_item(item_id: int, item: Item):
-    return {"item_id": item_id, **item.model_dump()}
+async def update_item(item_id: int, item: Item) -> Item:
+    items_db[item_id - 1] = item
+    return items_db
+
+
+@app.delete("/items/{item_id}")
+async def delete_item(item_id: int) -> Response:
+    del items_db[item_id - 1]
+    return JSONResponse(content={"message": "Item deleted successfully"})
